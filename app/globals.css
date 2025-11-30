@@ -1,0 +1,122 @@
+@import "tailwindcss";
+/* globals.css - ATUALIZADO */
+
+
+:root {
+  --primary-bg: #000000;
+  --secondary-bg: #111111;
+  --primary-text: #ffffff;
+  --secondary-text: #aaaaaa;
+  --accent-color: #ffffff;
+  --border-color: #333333;
+}
+
+/* Classes de tema */
+.light {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8f8f8;
+  --primary-text: #000000;
+  --secondary-text: #666666;
+  --accent-color: #000000;
+  --border-color: #e5e5e5;
+}
+
+.dark {
+  --primary-bg: #000000;
+  --secondary-bg: #111111;
+  --primary-text: #ffffff;
+  --secondary-text: #aaaaaa;
+  --accent-color: #ffffff;
+  --border-color: #333333;
+}
+
+.blue {
+  --primary-bg: #0a192f;
+  --secondary-bg: #112240;
+  --primary-text: #e6f1ff;
+  --secondary-text: #8892b0;
+  --accent-color: #64ffda;
+  --border-color: #233554;
+}
+
+.green {
+  --primary-bg: #0a0f0a;
+  --secondary-bg: #1a1f1a;
+  --primary-text: #f0fff0;
+  --secondary-text: #a0b0a0;
+  --accent-color: #00ff88;
+  --border-color: #2a3f2a;
+}
+
+.purple {
+  --primary-bg: #1a0b2e;
+  --secondary-bg: #2a1b3e;
+  --primary-text: #f8f0ff;
+  --secondary-text: #b8a0c8;
+  --accent-color: #9d4edd;
+  --border-color: #3a2b4e;
+}
+
+/* Aplicar variáveis CSS */
+body {
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Utilidades com variáveis CSS */
+.bg-primary {
+  background-color: var(--primary-bg);
+}
+
+.bg-secondary {
+  background-color: var(--secondary-bg);
+}
+
+.text-primary {
+  color: var(--primary-text);
+}
+
+.text-secondary {
+  color: var(--secondary-text);
+}
+
+.border-primary {
+  border-color: var(--border-color);
+}
+
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+.text-accent {
+  color: var(--accent-color);
+}
+
+/* Animações melhoradas */
+@keyframes themeTransition {
+  0% { opacity: 0.8; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.theme-transition {
+  animation: themeTransition 0.5s ease-in-out;
+}
+
+/* Scrollbar temática */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
