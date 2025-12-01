@@ -21,7 +21,6 @@
     "twilio": "^4.23.0"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^16.0.3",
     "@tailwindcss/postcss": "^4",
     "@types/cheerio": "^0.22.35",
     "@types/node": "^20",
