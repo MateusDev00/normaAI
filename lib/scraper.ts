@@ -5,123 +5,96 @@ import axios from "axios";
 
 export class LexAOScraper {
   private baseUrl = "https://lex.ao";
+  private userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
   /**
-   * Faz scraping de detalhes de um documento específico.
+   * Faz scraping profundo do conteúdo de um documento.
    */
   async getDocumentDetails(url: string): Promise<string> {
     try {
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
+      // Garantir que a URL é absoluta
+      const targetUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+
+      const response = await axios.get(targetUrl, {
+        headers: { "User-Agent": this.userAgent },
+        timeout: 10000 // Timeout de 10s para não prender o WhatsApp
       });
 
       const html = response.data;
       const $ = cheerio.load(html);
 
-      // Coleta títulos
-      const title =
-        $("h1").first().text().trim() ||
-        $("title").first().text().trim() ||
-        "Sem título";
+      // Remover scripts, estilos e elementos desnecessários para limpar o texto
+      $('script, style, nav, footer, header, .sidebar').remove();
 
-      // Coleta headings
-      const headings: string[] = [];
-      $("h1, h2, h3").each((_, el) =>
-        headings.push($(el).text().trim())
-      );
+      // Coleta título principal
+      const title = $("h1").first().text().trim() || $("title").first().text().trim();
 
-      // Coleta parágrafos
-      const paragraphs: string[] = [];
-      $("p").each((_, el) =>
-        paragraphs.push($(el).text().trim())
-      );
+      // Coleta o conteúdo principal (tentativa de focar na área de texto)
+      // Ajuste os seletores conforme a estrutura real do Lex.ao se necessário
+      const contentContainer = $("article, .document-content, .entry-content, #main").first();
+      
+      // Se não achar container específico, pega do body, mas filtrado
+      const target = contentContainer.length ? contentContainer : $("body");
 
-      // Junta tudo em um texto único
-      const fullText = `
-TÍTULO: ${title}
+      let cleanText = "";
+      
+      target.find("h1, h2, h3, h4, p, li").each((_, el) => {
+        const text = $(el).text().trim();
+        if (text.length > 10) { // Ignora textos muito curtos (links soltos, menus)
+           cleanText += `${text}\n\n`;
+        }
+      });
 
-CABEÇALHOS:
-${headings.join("\n")}
+      if (!cleanText) return "Conteúdo do documento não pôde ser extraído.";
 
-CONTEÚDO:
-${paragraphs.join("\n\n")}
-      `.trim();
-
-      return fullText || "Sem conteúdo extraído.";
+      return `TÍTULO DO DOCUMENTO: ${title}\n\nCONTEÚDO EXTRAÍDO:\n${cleanText}`.trim();
 
     } catch (error) {
-      console.error("Erro ao extrair detalhes do documento:", error);
-      return "Erro ao acessar o documento.";
+      console.error(`Erro ao extrair detalhes de ${url}:`, error);
+      return ""; // Retorna vazio para não atrapalhar o prompt
     }
   }
 
   /**
-   * Pesquisa documentos no lex.ao com base em um termo.
+   * Pesquisa lista de documentos.
    */
   async searchDocuments(query: string): Promise<any[]> {
     try {
       const searchUrl = new URL(`${this.baseUrl}/`);
       searchUrl.searchParams.set("s", query);
 
-      const response = await fetch(searchUrl.toString(), {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
+      const response = await axios.get(searchUrl.toString(), {
+        headers: { "User-Agent": this.userAgent }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const html = await response.text();
-      const $ = cheerio.load(html);
-
+      const $ = cheerio.load(response.data);
       const documents: any[] = [];
 
-      $("article, .post, .document").each((_, element) => {
-        const title = $(element)
-          .find("h1, h2, h3, .title")
-          .first()
-          .text()
-          .trim();
+      $("article, .post, .result").each((_, element) => {
+        const titleEl = $(element).find("h1, h2, h3, .entry-title a").first();
+        const title = titleEl.text().trim();
+        const link = titleEl.attr("href") || $(element).find("a").first().attr("href");
+        const snippet = $(element).find("p, .entry-summary").text().trim();
 
-        const link = $(element).find("a").first().attr("href");
-
-        const snippet = $(element)
-          .find("p, .excerpt, .summary")
-          .first()
-          .text()
-          .trim();
-
-        if (title) {
+        if (title && link) {
           documents.push({
             title,
-            url: link ? this.resolveUrl(link) : "#",
-            content: snippet || "Resumo não disponível",
-            type: "", // você pode adicionar extração futura
-            number: "",
-            date: "",
+            url: this.resolveUrl(link),
+            snippet: snippet
           });
         }
       });
 
-      return documents.slice(0, 5);
+      // Retorna apenas os 3 mais relevantes para economizar processamento
+      return documents.slice(0, 3);
     } catch (error) {
-      console.error("Erro ao buscar documentos:", error);
+      console.error("Erro na busca:", error);
       return [];
     }
   }
 
-  /**
-   * Converte URLs relativas em absolutas.
-   */
   private resolveUrl(link: string): string {
     if (link.startsWith("http")) return link;
-    if (link.startsWith("/")) return `${this.baseUrl}${link}`;
-    return `${this.baseUrl}/${link}`;
+    return `${this.baseUrl}${link.startsWith('/') ? '' : '/'}${link}`;
   }
 }

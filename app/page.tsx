@@ -142,7 +142,7 @@ export default function NormAIInterface() {
             className="group relative overflow-hidden bg-white text-black px-8 py-4 rounded-lg font-bold text-base tracking-wider transition-all duration-300 hover:bg-white-700 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
           >
             <span className="relative z-10 flex items-center gap-3">
-              💬 CONECTAR VIA WHATSAPP
+              💬 WHATSAPP
             </span>
             <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-all duration-300 group-hover:scale-100 group-hover:bg-green-800 opacity-20"></div>
           </button>
